@@ -53,7 +53,7 @@ In Declarative Pipeline syntax, the pipeline block defines all the work done thr
 
 <font size=3>Jenkinsfile (Declarative Pipeline)</font>
 
-```text
+```groovy
 pipeline {
     agent any [1]
 
@@ -105,7 +105,7 @@ Jenkins Pipeline exposes environment variables via the global variable env, whic
 
 <font size=4>Jenkinsfile using environment variables</font>
 
-```text
+```groovy
 pipeline {
     agent any
     stages {
@@ -120,7 +120,7 @@ pipeline {
 
 <font size=4>Jenkinsfile setting environment variables</font>
 
-```text
+```groovy
 pipeline {
     agent any
     environment { [1]
@@ -149,7 +149,7 @@ Environment variables can be set at run time and can be used by **shell scripts 
 
 Below is an example in a declarative pipeline using sh (shell) with both `returnStatus` and `returnStdout`.
 
-```text
+```groovy
 pipeline {
     agent any [1]
     environment {
