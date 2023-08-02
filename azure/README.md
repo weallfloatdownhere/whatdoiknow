@@ -8,11 +8,11 @@ Here, you will be able to find everything related to concepts, setups, examples 
 ### [Automating infrastructure deployments in the Cloud with Terraform and Azure Pipelines.](https://www.azuredevopslabs.com/labs/vstsextend/terraform/)
 In this section, we will go over the basic concepts of how Azure pipelines and terraform can interact togheter in order to automate the provisionning of our infrastructure.
 
-<font size=4>Overview</font>
+### Overview
 
 ![howto](https://www.azuredevopslabs.com/labs/vstsextend/terraform/images/Terraform-workflow.gif)
 
-<font size=4>Example</font>
+### Example
 
 Let's say you have the terraform file below located `terraform/terraform.tf` in your project repository.
 
@@ -29,11 +29,124 @@ provider "azurerm" {
 ...
 ```
 
+Stage: Terraform Validate
+This stage run the terraform validate command, and if there are any problems it will fail. As you can see the from YAML below, the stage dependsOn the runCheckov stage and we are also installing Terraform and running terraform init before the terraform validate command is executed;
+
+One of the other things which will happen when this stage is executed happens as part of the terraform init task, as we are setting ensureBackend to true the task will check for the presence of the Azure Storage Account we wish to use to store our Terraform state file in, if it is not there then the task will helpfully create it for us.
+
+Once your code has been validated we can move onto the next stage.
+
+```yaml
+  - stage: "validateTerraform"
+    displayName: "Terraform - Validate"
+    dependsOn:
+      - "runCheckov"
+    jobs:
+      - job: "TerraformJobs"
+        displayName: "Terraform > install, init and validate"
+        continueOnError: false
+        steps:
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: "$(tf_version)"
+            displayName: "Install > terraform"
+
+          - task: TerraformCLI@0
+            inputs:
+              command: "init"
+              backendType: "azurerm"
+              backendServiceArm: "$(SUBSCRIPTION_NAME)"
+              ensureBackend: true
+              backendAzureRmResourceGroupName: "$(tf_environment)-$(tf_state_rg)"
+              backendAzureRmResourceGroupLocation: "$(tz_state_location)"
+              backendAzureRmStorageAccountName: "$(tf_state_sa_name)"
+              backendAzureRmStorageAccountSku: "$(tf_state_sku)"
+              backendAzureRmContainerName: $(tf_state_container_name)
+              backendAzureRmKey: "$(tf_environment).terraform.tstate"
+            displayName: "Run > terraform init"
+
+          - task: TerraformCLI@0
+            inputs:
+              command: "validate"
+              environmentServiceName: "$(SUBSCRIPTION_NAME)"
+            displayName: "Run > terraform validate"
+```
+
+Stage: Terraform Plan
+This stage is where things get a little more interesting, eventually, as our environment does not persist across stages we need to install Terraform and run terraform init again.
+
+Once that has been done we are running the terraform plan command, thanks to some of the features in the Terraform Azure DevOps extension by Charles Zipp  we are able to publish the results of running terraform plan to our pipeline run by setting the publishPlanResults option.
+
+Before we look at the last tasks of this stage lets look at the code for the full stage;
+
+```yaml
+  - stage: "planTerraform"
+    displayName: "Terraform - Plan"
+    dependsOn:
+      - "validateTerraform"
+    jobs:
+      - job: "TerraformJobs"
+        displayName: "Terraform > install, init & plan"
+        steps:
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: "$(tf_version)"
+            displayName: "Install > terraform"
+
+          - task: TerraformCLI@0
+            inputs:
+              command: "init"
+              backendType: "azurerm"
+              backendServiceArm: "$(SUBSCRIPTION_NAME)"
+              ensureBackend: true
+              backendAzureRmResourceGroupName: "$(tf_environment)-$(tf_state_rg)"
+              backendAzureRmResourceGroupLocation: "$(tz_state_location)"
+              backendAzureRmStorageAccountName: "$(tf_state_sa_name)"
+              backendAzureRmStorageAccountSku: "$(tf_state_sku)"
+              backendAzureRmContainerName: $(tf_state_container_name)
+              backendAzureRmKey: "$(tf_environment).terraform.tstate"
+            displayName: "Run > terraform init"
+
+          - task: TerraformCLI@0
+            inputs:
+              command: "plan"
+              environmentServiceName: "$(SUBSCRIPTION_NAME)"
+              publishPlanResults: "PlanResults"
+              commandOptions: "-out=$(System.DefaultWorkingDirectory)/terraform.tfplan -detailed-exitcode"
+            name: "plan"
+            displayName: "Run > terraform plan"
+
+          - task: TerraformCLI@0
+            inputs:
+              command: "show"
+              environmentServiceName: "$(SUBSCRIPTION_NAME)"
+              inputTargetPlanOrStateFilePath: "$(System.DefaultWorkingDirectory)/terraform.tfplan"
+            displayName: "Run > terraform show"
+
+          - bash: |
+              if [ "$TERRAFORM_PLAN_HAS_CHANGES" = true ] && [ "$TERRAFORM_PLAN_HAS_DESTROY_CHANGES" = false ] ; then
+                echo "##vso[task.setvariable variable=HAS_CHANGES_ONLY;isOutput=true]true"
+                echo "##vso[task.logissue type=warning]Changes with no destroys detected, it is safe for the pipeline to proceed automatically"
+                fi
+              if [ "$TERRAFORM_PLAN_HAS_CHANGES" = true ] && [ "$TERRAFORM_PLAN_HAS_DESTROY_CHANGES" = true ] ; then
+                echo "##vso[task.setvariable variable=HAS_DESTROY_CHANGES;isOutput=true]true"
+                echo "##vso[task.logissue type=warning]Changes with Destroy detected, pipeline will require a manual approval to proceed"
+                fi
+              if [ "$TERRAFORM_PLAN_HAS_CHANGES" != true ] ; then
+                echo "##vso[task.logissue type=warning]No changes detected, terraform apply will not run"
+              fi              
+            name: "setvar"
+            displayName: "Vars > Set Variables for next stage"
+```
+
+### References
+* [Azure DevOps Terraform Pipeline with Checkov & Approvals](https://www.russ.foo/2021/06/08/azure-devops-terraform-pipeline-with-checkov-approvals/)
+
 # Docker images building & pushing.
 
 ## [Build and push Docker images to Azure Container Registry using Docker templates.](https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/containers/acr-template)
 
-<font size=4>Create the pipeline.</font>
+### Create the pipeline.
 
 1. Sign in to your Azure DevOps organization and navigate to your project.
 
@@ -73,7 +186,7 @@ provider "azurerm" {
 
     ![commit](https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/media/jobs-build.png?view=azure-devops)
 
-<font size=4>How we build our own pipeline as code.</font>
+### How we build our own pipeline as code.
 
 The pipeline that we just created in the previous section was generated from the Docker container template YAML. The build stage uses the Docker task Docker@2 to build and push your Docker image to the container registry.
 
@@ -122,7 +235,7 @@ stages:
 
 ### Push docker image in various container registry services.
 
-<font size=3>Azure container registry (ACR).</font>
+Azure container registry (ACR).
 
 ```yaml
 # .azure/templates/push-acr.yml
@@ -145,7 +258,7 @@ stages:
           $(tag)
 ```
 
-<font size=3>Amazon Elastic Container Registry (ECR).</font>
+Amazon Elastic Container Registry (ECR).
 
 ```yaml
 # .azure/templates/push-ecr.yml
