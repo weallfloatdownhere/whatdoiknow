@@ -54,11 +54,15 @@ It uses the templates/build.yml file as a template and will use the stages defin
 ```yaml
 # .azure/azure-pipelines.yml
 trigger:  
-  branches:    
-    include:      
-      - master
-pr: none
+  branches:
+    include:
+    - master
+    - releases/*
+    exclude:
+    - releases/old*
+
 stages:
+# these act as includes, you could also write those stage directly in this file instead.
 - template: .azure/templates/build.yml
 - template: .azure/templates/push.yml
 ```
