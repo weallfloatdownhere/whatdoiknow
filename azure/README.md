@@ -43,7 +43,7 @@ Here, you will be able to find everything related to concepts, setups, examples 
 
     ![commit](https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/media/jobs-build.png?view=azure-devops)
 
-<font size=4>How we build your pipeline.</font>
+<font size=4>How we build our own pipeline as code.</font>
 
 The pipeline that we just created in the previous section was generated from the Docker container template YAML. The build stage uses the Docker task Docker@2 to build and push your Docker image to the container registry.
 
