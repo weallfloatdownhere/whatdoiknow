@@ -47,9 +47,30 @@ Here, you will be able to find everything related to concepts, setups, examples 
 
 The pipeline that we just created in the previous section was generated from the Docker container template YAML. The build stage uses the Docker task Docker@2 to build and push your Docker image to the container registry.
 
+`.azure/azure-pipelines.yml`
+This file is our main pipeline and only triggers on the master branch.
+It uses the templates/build.yml file as a template and will use the stages defined in that file.
+
 ```yaml
+# .azure/azure-pipelines.yml
+trigger:  
+  branches:    
+    include:      
+      - master
+pr: none
+stages:
+- template: .azure/templates/build.yml
+- template: .azure/templates/push.yml
+```
+
+## Azure pipeline steps templates
+
+### Build docker image from Dockerfile.
+
+```yaml
+# .azure/templates/build.yml
 - stage: Build
-  displayName: Build and push stage
+  displayName: Build a docker image
   jobs:  
   - job: Build
     displayName: Build job
@@ -57,12 +78,58 @@ The pipeline that we just created in the previous section was generated from the
       vmImage: $(vmImageName)
     steps:
     - task: Docker@2
-      displayName: Build and push an image to container registry
+      displayName: Building the image
       inputs:
-        command: buildAndPush
+        command: build
+        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        tags: |
+          $(tag)
+```
+
+### Push docker image in various container registry services.
+
+<font size=3>Azure container registry (ACR).</font>
+
+```yaml
+# .azure/templates/push-acr.yml
+- stage: Push
+  displayName: Push to ACR
+  jobs:  
+  - job: Push
+    displayName: Push job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: Docker@2
+      displayName: Push image to ACR.
+      inputs:
+        command: push
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
+```
+
+<font size=3>Amazon Elastic Container Registry (ECR).</font>
+
+```yaml
+# .azure/templates/push-ecr.yml
+- stage: Push
+  displayName: Push to ECR
+  jobs:  
+  - job: Push
+    displayName: Push job
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: ECRPushImage@1
+      inputs:
+        awsCredentials: 'AWS_ECR'
+        regionName: $(AWS_REGION)
+        imageSource: 'imagename'
+        sourceImageName: $(DOCKER_REPOSITORY_NAME)
+        sourceImageTag: $(Build.BuildId)
+        pushTag: latest
+        repositoryName: $(DOCKER_REPOSITORY_NAME)
 ```
