@@ -23,6 +23,7 @@ terraform {
 }
 provider "azurerm" {
     subscription_id = "74d6a1ea-aaaa-bbbb-cccc-28b098c3435f"
+    tenant_id       = "11111111-1111-1111-1111-111111111111"
     skip_provider_registration = "true"
     features {}
 }
@@ -43,25 +44,13 @@ Once your code has been validated we can move onto the next stage.
       - job: "TerraformJobs"
         displayName: "Terraform > install, init and validate"
         continueOnError: false
-        steps:
-          - task: TerraformInstaller@0
-            inputs:
-              terraformVersion: "$(tf_version)"
-            displayName: "Install > terraform"
 
-          - task: TerraformCLI@0
-            inputs:
-              command: "init"
-              backendType: "azurerm"
-              backendServiceArm: "$(SUBSCRIPTION_NAME)"
-              ensureBackend: true
-              backendAzureRmResourceGroupName: "$(tf_environment)-$(tf_state_rg)"
-              backendAzureRmResourceGroupLocation: "$(tz_state_location)"
-              backendAzureRmStorageAccountName: "$(tf_state_sa_name)"
-              backendAzureRmStorageAccountSku: "$(tf_state_sku)"
-              backendAzureRmContainerName: $(tf_state_container_name)
-              backendAzureRmKey: "$(tf_environment).terraform.tstate"
-            displayName: "Run > terraform init"
+        steps:
+          - script: apt-get -y install terraform
+            displayName: Install Terraform
+
+          - script: terraform plan -var-file=plan.tfvars --out=plan.out
+            displayName: Terraform plan
 
           - task: TerraformCLI@0
             inputs:
@@ -278,3 +267,7 @@ Amazon Elastic Container Registry (ECR).
         pushTag: latest
         repositoryName: $(DOCKER_REPOSITORY_NAME)
 ```
+
+# Additionals ressources.
+
+[Official Azure pipeline tasks repository.](https://github.com/microsoft/azure-pipelines-tasks/tree/master/Tasks)
