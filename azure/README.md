@@ -1,5 +1,30 @@
 # Azure Devops documentation
-Here, you will be able to find everything related to concepts, setups, examples and information about how to implement CI for your projects using Azure Devops.
+Here, you will be able to find everything related to concepts, setups, examples and information about how to implement CD for your projects and infrastructure using Azure Devops.
+
+*`IMPORTANT:` If you have not read the generic [**devops**](../devops/README.md) section yet, we strongly suggest you to go there first in order to get yourself familliar with the generic devops concepts.*
+
+## [Automating infrastructure deployments in the Cloud with Terraform and Azure Pipelines.](https://www.azuredevopslabs.com/labs/vstsextend/terraform/)
+
+<font size=4>Overview</font>
+
+![howto](https://www.azuredevopslabs.com/labs/vstsextend/terraform/images/Terraform-workflow.gif)
+
+<font size=4>Example</font>
+
+Let's say you have the terraform file below located `terraform/terraform.tf` in your project repository.
+
+*terraform/terraform.tf*
+```groovy
+terraform {
+    backend "azurerm" {}
+}
+provider "azurerm" {
+    subscription_id = "74d6a1ea-aaaa-bbbb-cccc-28b098c3435f"
+    skip_provider_registration = "true"
+    features {}
+}
+...
+```
 
 ## [Build and push Docker images to Azure Container Registry using Docker templates.](https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/containers/acr-template)
 
