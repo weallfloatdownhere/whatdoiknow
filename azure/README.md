@@ -39,8 +39,6 @@ Once your code has been validated we can move onto the next stage.
 ```yaml
   - stage: "validateTerraform"
     displayName: "Terraform - Validate"
-    dependsOn:
-      - "runCheckov"
     jobs:
       - job: "TerraformJobs"
         displayName: "Terraform > install, init and validate"
