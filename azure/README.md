@@ -3,7 +3,10 @@ Here, you will be able to find everything related to concepts, setups, examples 
 
 *`IMPORTANT:` If you have not read the generic [**devops**](../devops/README.md) section yet, we strongly suggest you to go there first in order to get yourself familliar with the generic devops concepts.*
 
-## [Automating infrastructure deployments in the Cloud with Terraform and Azure Pipelines.](https://www.azuredevopslabs.com/labs/vstsextend/terraform/)
+# Infrastructure as code
+
+### [Automating infrastructure deployments in the Cloud with Terraform and Azure Pipelines.](https://www.azuredevopslabs.com/labs/vstsextend/terraform/)
+In this section, we will go over the basic concepts of how Azure pipelines and terraform can interact togheter in order to automate the provisionning of our infrastructure.
 
 <font size=4>Overview</font>
 
@@ -25,6 +28,8 @@ provider "azurerm" {
 }
 ...
 ```
+
+# Docker images building & pushing.
 
 ## [Build and push Docker images to Azure Container Registry using Docker templates.](https://learn.microsoft.com/en-us/azure/devops/pipelines/ecosystems/containers/acr-template)
 
