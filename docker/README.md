@@ -8,6 +8,10 @@ Docker is an open platform for developing, shipping, and running applications. D
 
 # [Get started](https://docs.docker.com/get-started/)
 
+## Container registries
+
+A container registry is a repository—or collection of repositories—used to store and access container images. Container registries can support container-based application development, often as part of DevOps processes. Container registries can connect directly to container orchestration platforms like Docker and Kubernetes. 
+
 ## [Dockerfile](https://docs.docker.com/engine/reference/builder/)
 Docker can build images automatically by reading the instructions from a Dockerfile. A Dockerfile is a text document that contains all the commands a user could call on the command line to assemble an image. This page describes the commands you can use in a Dockerfile. For example, lets say you want to build a `NodeJS` webapp using docker.
 
@@ -35,11 +39,19 @@ CMD ["node", "src/index.js"]
 EXPOSE 3000
 ```
 
-*Now, we can build the application using the combination of the project source code along with the `Dockerfile` located at the root of the project repository.*
+*Now, we can `build` the application using the combination of the project source code along with the `Dockerfile` located at the root of the project repository.*
 
 ```bash
 $ cd webapp/
 $ docker build -t webapp:1.0.0 .
+```
+
+*Finally, we can push the final image to into our `container registry`.*
+
+```bash
+# eg: docker tag webapp:1.0.0 myRegistry.com/webapp:1.0.0
+$ docker tag webapp:1.0.0 [REGISTRYHOST/][USERNAME/]NAME[:TAG]
+$ docker push NAME[:TAG]
 ```
 
 ## Dockerfiles templates
@@ -79,8 +91,3 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 EXPOSE 9011
 ```
 
-## Container registries
-
-<font size=3>What is a container registry?</font>
-
-A container registry is a repository—or collection of repositories—used to store and access container images. Container registries can support container-based application development, often as part of DevOps processes. Container registries can connect directly to container orchestration platforms like Docker and Kubernetes. 
