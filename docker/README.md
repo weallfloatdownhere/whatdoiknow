@@ -19,6 +19,7 @@ Docker can build images automatically by reading the instructions from a Dockerf
 │ ├── README.md
 │ ├── spec/
 │ ├── src/
+│   └── index.js
 │ └── yarn.lock
 │ └── Dockerfile
 ```
@@ -45,7 +46,7 @@ $ docker build -t webapp:1.0.0 .
 
 TODO..
 
-<font size=3>Angular</font>
+<font size=3>Angular application</font>
 
 ```docker
 FROM node:latest AS builder
@@ -56,13 +57,13 @@ RUN npm set progress=false && npm ci --force
 COPY . .
 RUN npm run ng -- build -c=development
 
-FROM nginx:1.17.1-alpine AS final
+FROM nginx:latest AS final
 COPY --from=builder /app/dist/output /usr/share/nginx/html
 CMD ["nginx", "-g", "daemon off;"]
 EXPOSE 80
 ```
 
-<font size=3>Java</font>
+<font size=3>Java application</font>
 
 ```docker
 FROM maven:3.9.3 AS builder
@@ -77,3 +78,9 @@ COPY --from=builder /output/app.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
 EXPOSE 9011
 ```
+
+## Container registries
+
+<font size=3>What is a container registry?</font>
+
+A container registry is a repository—or collection of repositories—used to store and access container images. Container registries can support container-based application development, often as part of DevOps processes. Container registries can connect directly to container orchestration platforms like Docker and Kubernetes. 
